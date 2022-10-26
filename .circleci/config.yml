@@ -1,0 +1,75 @@
+version: 2
+job_python: &job_python
+  docker:
+    - image: circleci/python:3.8.0b1-stretch-node
+step_save_cache: &step_save_cache
+  save_cache:
+    paths:
+      - ~/.cache/yarn-lock
+    key: node-modules-{{ checksum "yarn.lock" }}
+step_restore_cache: &step_restore_cache
+  restore_cache:
+    keys:
+      - node-modules-{{ checksum "yarn.lock" }}
+step_pull_solc_docker: &step_pull_solc_docker
+  run:
+    name: "Pull solc docker images"
+    command: |
+      docker pull ethereum/solc:0.7.3
+step_setup_global_packages: &step_setup_global_packages
+  run:
+    name: "Set up global packages"
+    command: |
+      npm install
+step_setup_slither: &step_setup_slither
+  run:
+    name: "Setup slither analyser https://github.com/crytic/slither"
+    command: |
+      sudo pip3 install slither-analyzer
+      sudo apt-get install jq
+step_setup_solc_select: &step_setup_solc_select
+  run:
+    name: "Setup solc-select"
+    command: |
+      sudo pip3 install solc-select
+jobs:
+  ci-test:
+    docker:
+      - image: cimg/node:14.16.1
+    steps:
+      - checkout
+      - <<: *step_restore_cache
+      - <<: *step_setup_global_packages
+      - <<: *step_save_cache
+      - run:
+          name: "Run CI Tests"
+          command: |
+            npm install
+            npm run compile
+            RPC_URL=https://eth-mainnet.alchemyapi.io/v2/TKLrQ9-f0AahbCEYRaPGh7EsJRVYYLh2 npm run test
+          when: always
+      
+  security-test:
+    <<: *job_python
+    steps:
+      - checkout
+      - <<: *step_restore_cache
+      - setup_remote_docker:
+          version: 19.03.13
+      - <<: *step_pull_solc_docker
+      - <<: *step_setup_global_packages
+      - <<: *step_setup_slither
+      - <<: *step_setup_solc_select
+      - <<: *step_save_cache
+      - run:
+          name: "Run slither on infrastructure contracts"
+          command:  |
+            slither --exclude-informational --filter-paths lib . || true
+          when: always
+
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - security-test
+      - ci-test

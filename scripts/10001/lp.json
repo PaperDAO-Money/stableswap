@@ -1,0 +1,11 @@
+{
+  "assimilators": {
+    "UsdcToUsdAssimilator": "0x74c88a48E5776AC26661EC92835cf9715b92bAd8",
+    "UswToUsdAssimilator": "0x9a5ae59CF8a0a1f336dF3aF312f9bd8B6215F5b3",
+    "UsdtToUsdAssimilator": "0xCdc13bb16c16f98821e2794CC533561D0321c437"
+  },
+  "curves": {
+    "PaperDAO USDC USW LP": "0xc0323DA1C2694D8101882884c58EaD25C9194E54",
+    "PaperDAO USDC USDT LP": "0xbFB85Df4BF676F6b6bf205F8f0b8561e7BC7dF56"
+  }
+}
